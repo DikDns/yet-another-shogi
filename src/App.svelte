@@ -3,12 +3,12 @@
   class Piece {
     abbreviation: string;
     name: string;
-    color: string;
+    color: "sente" | "gote";
     position: number[];
 
     constructor(
       name: string,
-      color: string,
+      color: "sente" | "gote",
       position: number[],
       abbreviation?: string
     ) {
@@ -23,9 +23,12 @@
     coordinates: number[][];
     pieces: Piece[];
 
-    constructor() {
+    constructor(pieces?: Piece[]) {
       this.coordinates = [];
-      this.pieces = [new Piece("king", "sente", [5, "e".charCodeAt(0)])];
+      this.pieces = pieces || [
+        new Piece("king", "sente", [1, "e".charCodeAt(0)]),
+        new Piece("king", "gote", [9, "e".charCodeAt(0)]),
+      ];
 
       for (let i = 9; i >= 1; i--) {
         for (let j = "a".charCodeAt(0); j <= "i".charCodeAt(0); j++) {
@@ -35,24 +38,84 @@
     }
   }
 
-  const board = new Board();
+  let board = new Board();
+
+  let selectedPiece: Piece | null = null;
+
+  const handleBoardClick = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    const targetId = target.id.split("-");
+
+    if (
+      targetId[0] === "piece" &&
+      selectedPiece?.color !== targetId[1] &&
+      selectedPiece?.name !== targetId[2]
+    ) {
+      const pieceColor = targetId[1];
+      const pieceName = targetId[2];
+
+      selectedPiece = board.pieces.find(
+        (piece) => piece.color === pieceColor && piece.name === pieceName
+      )!;
+
+      return;
+    }
+
+    const newPiecePosition = target.id
+      .split("-")[1]
+      .split(",")
+      .map((coordinate) => +coordinate);
+
+    if (
+      newPiecePosition === selectedPiece?.position ||
+      targetId[0] === "piece"
+    ) {
+      selectedPiece = null;
+      return;
+    }
+
+    if (targetId[0] === "board") {
+      board = new Board([
+        ...board.pieces.filter(
+          (piece) =>
+            piece.color !== selectedPiece!.color ||
+            piece.name !== selectedPiece!.name
+        ),
+        new Piece(
+          selectedPiece!.name,
+          selectedPiece!.color,
+          newPiecePosition,
+          selectedPiece!.abbreviation
+        ),
+      ]);
+
+      selectedPiece = null;
+
+      return;
+    }
+  };
+
+  const handleBoardKeyDown = (event: KeyboardEvent) => {};
 </script>
 
 <main>
+  {selectedPiece?.abbreviation}
   <div class="board-container">
     {#each board.coordinates as coordinate (coordinate)}
-      <div
+      <button
         class="board"
-        id={`${coordinate[0]},${String.fromCharCode(coordinate[1])}`}
+        id={`board-${coordinate[0]},${coordinate[1]}`}
+        on:click={handleBoardClick}
+        on:keydown={handleBoardKeyDown}
       >
         {#each board.pieces as piece (piece)}
           {#if piece.position[0] === coordinate[0] && piece.position[1] === coordinate[1]}
-            <div class="piece" id={`${piece.color}-${piece.name}`}>
+            <div class="piece" id={`piece-${piece.color}-${piece.name}`}>
               {piece.abbreviation}
             </div>
           {/if}
         {/each}
-      </div>
+      </button>
     {/each}
   </div>
 </main>
@@ -67,6 +130,7 @@
   }
 
   .board {
+    padding: 0;
     background-color: burlywood;
     width: 11.1%;
     height: 11.1%;
@@ -75,6 +139,10 @@
     display: flex;
     justify-content: center;
     align-items: center;
+  }
+
+  .board:focus {
+    outline: none;
   }
 
   .piece {
