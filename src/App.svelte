@@ -19,7 +19,10 @@
 <main>
   <div class="board-container">
     {#each board.coordinates as coordinate (coordinate)}
-      <div class="board" />
+      <div
+        class="board"
+        id={`${coordinate[0]},${String.fromCharCode(coordinate[1])}`}
+      />
     {/each}
   </div>
 </main>
