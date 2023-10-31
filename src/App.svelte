@@ -1,42 +1,6 @@
 <script lang="ts">
-  // sente and gote
-  class Piece {
-    abbreviation: string;
-    name: string;
-    color: "sente" | "gote";
-    position: number[];
-
-    constructor(
-      name: string,
-      color: "sente" | "gote",
-      position: number[],
-      abbreviation?: string
-    ) {
-      this.abbreviation = abbreviation || name[0].toUpperCase();
-      this.name = name;
-      this.color = color;
-      this.position = position;
-    }
-  }
-
-  class Board {
-    coordinates: number[][];
-    pieces: Piece[];
-
-    constructor(pieces?: Piece[]) {
-      this.coordinates = [];
-      this.pieces = pieces || [
-        new Piece("king", "sente", [1, "e".charCodeAt(0)]),
-        new Piece("king", "gote", [9, "e".charCodeAt(0)]),
-      ];
-
-      for (let i = 9; i >= 1; i--) {
-        for (let j = "a".charCodeAt(0); j <= "i".charCodeAt(0); j++) {
-          this.coordinates.push([i, j]);
-        }
-      }
-    }
-  }
+  import Piece from "./lib/Piece";
+  import Board from "./lib/Board";
 
   let board = new Board();
 
@@ -45,6 +9,10 @@
   const handleBoardClick = (event: MouseEvent) => {
     const target = event.target as HTMLElement;
     const targetId = target.id.split("-");
+
+    if (!selectedPiece && targetId[0] === "board") {
+      return;
+    }
 
     if (
       targetId[0] === "piece" &&
